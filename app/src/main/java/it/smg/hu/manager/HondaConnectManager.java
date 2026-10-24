@@ -309,7 +309,7 @@ public class HondaConnectManager {
 
     // Used in onPause (app in background)
     public void sendToBackground(){
-        if (Log.isDebug()) Log.d(TAG, "sendToBackground -> app with auth " + pControl_.authType + " unregister SW callback");
+        if (Log.isDebug()) Log.d(TAG, "sendToBackground -> app with auth " + (pControl_ != null ? pControl_.authType : "unknown") + " unregister SW callback");
        unregisterSteeringMenuCallback();
        notifySteeringMenuDispMode(0);
     }
