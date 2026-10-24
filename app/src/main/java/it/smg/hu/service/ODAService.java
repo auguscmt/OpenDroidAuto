@@ -174,10 +174,6 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
 
         if (Log.isInfo()) Log.i(TAG, "Stop");
 
-        if (Settings.instance().advanced.hondaIntegrationEnabled()){
-            HondaConnectManager.instance().endAudioBinding();
-        }
-
         // Detach the entity before native teardown so reentrant callbacks
         // cannot observe a reference that is already being destroyed.
         AndroidAutoEntity entity;
@@ -186,11 +182,17 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
             androidAutoEntity_ = null;
         }
         try {
-            if (entity != null) {
-                try {
-                    entity.stop();
-                } finally {
-                    entity.delete();
+            try {
+                if (Settings.instance().advanced.hondaIntegrationEnabled()) {
+                    HondaConnectManager.instance().endAudioBinding();
+                }
+            } finally {
+                if (entity != null) {
+                    try {
+                        entity.stop();
+                    } finally {
+                        entity.delete();
+                    }
                 }
             }
         } finally {
