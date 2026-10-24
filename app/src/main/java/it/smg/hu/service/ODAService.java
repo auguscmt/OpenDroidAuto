@@ -213,6 +213,7 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                 } finally {
                     synchronized (this) {
                         startThread_ = null;
+                        isStopping_ = false;
                     }
                 }
             }
