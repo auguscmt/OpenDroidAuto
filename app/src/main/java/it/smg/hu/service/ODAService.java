@@ -52,7 +52,8 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
 
     private Handler mainHandler_;
 
-    private boolean isRunning_;
+    private volatile boolean isRunning_;
+    private boolean isStopping_;
 
     public ODAService() {}
 
@@ -152,12 +153,16 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
     }
 
     public void stop(){
-        if (!isRunning_) {
-            if (Log.isInfo()) Log.i(TAG, "service not running, already stopped?");
-            return;
+        // Claim shutdown once, without holding the monitor during native teardown:
+        // JNI callbacks can re-enter stop() from another thread.
+        synchronized (this) {
+            if (!isRunning_ || isStopping_) {
+                if (Log.isInfo()) Log.i(TAG, "service not running or already stopping");
+                return;
+            }
+            isStopping_ = true;
+            isRunning_ = false;
         }
-
-        isRunning_ = false;
 
         if (Log.isInfo()) Log.i(TAG, "Stop");
 
