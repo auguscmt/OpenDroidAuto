@@ -137,6 +137,13 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
             } catch (RuntimeException e) {
                 Log.e(TAG, "WiFi session startup error", e);
                 onAndroidAutoQuitOnError("WIFI GENERIC ERROR", -1);
+            } finally {
+                // A failed or absent endpoint must not block a later retry.
+                synchronized (ODAService.this) {
+                    if (!isRunning_ && !isStopping_ && startThread_ == Thread.currentThread()) {
+                        startThread_ = null;
+                    }
+                }
             }
         });
         startThread_.start();
