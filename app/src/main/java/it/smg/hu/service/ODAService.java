@@ -73,7 +73,7 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
     }
 
     public synchronized void startUsb(SurfaceView surfaceView, InputDevice.OnKeyHolder keyHolder){
-        if (startThread_ != null || isRunning_) {
+        if (startThread_ != null || isRunning_ || isStopping_) {
             if (Log.isInfo()) Log.i(TAG, "Ignoring duplicate USB start");
             return;
         }
@@ -102,13 +102,16 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                     return;
                 }
             }
+            synchronized (ODAService.this) {
+                if (!isRunning_) startThread_ = null;
+            }
             if (Log.isInfo()) Log.i(TAG, "start usb thead completed");
         });
         startThread_.start();
     }
 
     public synchronized void startWifi(SurfaceView surfaceView, InputDevice.OnKeyHolder keyHolder){
-        if (startThread_ != null || isRunning_) {
+        if (startThread_ != null || isRunning_ || isStopping_) {
             if (Log.isInfo()) Log.i(TAG, "Ignoring duplicate WiFi start");
             return;
         }
@@ -124,6 +127,9 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                     TCPEndpoint tcpEndpoint = new TCPEndpoint(ipAddress);
                     androidAutoEntity_ = AndroidAutoEntityFactory.create(this, tcpEndpoint, surfaceView, keyHolder);
                     androidAutoEntity_.start(this);
+                }
+                synchronized (ODAService.this) {
+                    if (!isRunning_) startThread_ = null;
                 }
                 if (Log.isInfo()) Log.i(TAG, "start wifi thead completed");
             } catch (TCPConnectException e){
