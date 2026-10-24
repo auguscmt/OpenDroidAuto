@@ -80,12 +80,13 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
         startThread_ = new Thread(() -> {
             Looper.prepare();
 
-            if (usbManager_.aoapDevice() != null) {
+            LibUsbDevice device = usbManager_.aoapDevice();
+            if (device != null) {
                 isRunning_ = true;
 
                 if (Log.isVerbose()) Log.v(TAG, "aoap device available, start in usb mode");
                 try {
-                    LibUsbDevice device = usbManager_.aoapDevice();
+
                     if (device.open()) {
                         if (Log.isInfo()) Log.i(TAG, "device opened");
                         androidAutoEntity_ = AndroidAutoEntityFactory.create(this, device, surfaceView, keyHolder);
