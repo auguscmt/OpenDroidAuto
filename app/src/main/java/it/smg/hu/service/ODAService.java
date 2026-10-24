@@ -134,7 +134,7 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                 if (Log.isInfo()) Log.i(TAG, "start wifi thead completed");
             } catch (TCPConnectException e){
                 Log.e(TAG, "TCP Connection error", e);
-                stop();
+                onAndroidAutoQuitOnError("WIFI TCP CONNECTION", -1);
             } catch (RuntimeException e) {
                 Log.e(TAG, "WiFi session startup error", e);
                 onAndroidAutoQuitOnError("WIFI GENERIC ERROR", -1);
