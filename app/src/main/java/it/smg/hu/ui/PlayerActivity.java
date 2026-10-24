@@ -139,7 +139,9 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
     protected void onPause() {
         if (Log.isDebug()) Log.d(TAG, "onPause");
         super.onPause();
-        odaService_.releaseFocus();
+        if (odaService_ != null) {
+            odaService_.releaseFocus();
+        }
 
         if (isServiceBound_) {
             unbindService(this);
@@ -207,7 +209,9 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d(TAG, "surfaceDestroyed");
-        odaService_.releaseFocus();
+        if (odaService_ != null) {
+            odaService_.releaseFocus();
+        }
     }
 
     @Override
