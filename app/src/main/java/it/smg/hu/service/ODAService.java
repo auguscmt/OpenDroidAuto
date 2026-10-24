@@ -98,7 +98,6 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                 } catch (Exception e){
                     Log.e(TAG, "error", e);
                     onAndroidAutoQuitOnError("USB GENERIC ERROR", -1);
-//                    onAndroidAutoQuit();
                     return;
                 }
             }
@@ -135,6 +134,9 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
             } catch (TCPConnectException e){
                 Log.e(TAG, "TCP Connection error", e);
                 stop();
+            } catch (RuntimeException e) {
+                Log.e(TAG, "WiFi session startup error", e);
+                onAndroidAutoQuitOnError("WIFI GENERIC ERROR", -1);
             }
         });
         startThread_.start();
