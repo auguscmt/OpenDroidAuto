@@ -178,13 +178,19 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
             HondaConnectManager.instance().endAudioBinding();
         }
 
-        if (androidAutoEntity_ != null) {
-            androidAutoEntity_.stop();
-        }
-
-        if (androidAutoEntity_ != null) {
-            androidAutoEntity_.delete();
+        // Detach the entity before native teardown so reentrant callbacks
+        // cannot observe a reference that is already being destroyed.
+        AndroidAutoEntity entity;
+        synchronized (this) {
+            entity = androidAutoEntity_;
             androidAutoEntity_ = null;
+        }
+        if (entity != null) {
+            try {
+                entity.stop();
+            } finally {
+                entity.delete();
+            }
         }
 
         startThread_ = null;
