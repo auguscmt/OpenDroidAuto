@@ -115,7 +115,8 @@ public class HondaConnectManager {
 
                 registerSteeringMenuCallback();
 
-                if (pControl_.authType != Constants.AUTH_TYPE_PREINSTALL){
+                // Firmware whitelist lookup may fail or return null.
+                if (pControl_ != null && pControl_.authType != Constants.AUTH_TYPE_PREINSTALL) {
                     notifySteeringMenuDispMode(1);
                 }
 
