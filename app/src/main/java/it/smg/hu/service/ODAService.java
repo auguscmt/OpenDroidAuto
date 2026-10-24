@@ -126,7 +126,9 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
     }
 
     public void shutdown(){
-        androidAutoEntity_.shutdown();
+        if (androidAutoEntity_ != null) {
+            androidAutoEntity_.shutdown();
+        }
     }
 
     public void releaseFocus(){
@@ -136,7 +138,9 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
     }
 
     public void gainFocus(){
-        androidAutoEntity_.gainFocus();
+        if (androidAutoEntity_ != null) {
+            androidAutoEntity_.gainFocus();
+        }
     }
 
     public void stop(){
