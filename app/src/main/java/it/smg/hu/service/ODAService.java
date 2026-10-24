@@ -71,7 +71,11 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
         localBroadcastManager_ = LocalBroadcastManager.getInstance(this);
     }
 
-    public void startUsb(SurfaceView surfaceView, InputDevice.OnKeyHolder keyHolder){
+    public synchronized void startUsb(SurfaceView surfaceView, InputDevice.OnKeyHolder keyHolder){
+        if (startThread_ != null || isRunning_) {
+            if (Log.isInfo()) Log.i(TAG, "Ignoring duplicate USB start");
+            return;
+        }
         startThread_ = new Thread(() -> {
             Looper.prepare();
 
@@ -102,7 +106,11 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
         startThread_.start();
     }
 
-    public void startWifi(SurfaceView surfaceView, InputDevice.OnKeyHolder keyHolder){
+    public synchronized void startWifi(SurfaceView surfaceView, InputDevice.OnKeyHolder keyHolder){
+        if (startThread_ != null || isRunning_) {
+            if (Log.isInfo()) Log.i(TAG, "Ignoring duplicate WiFi start");
+            return;
+        }
         startThread_ = new Thread(() -> {
             Looper.prepare();
 
