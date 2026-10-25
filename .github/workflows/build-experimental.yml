@@ -27,6 +27,10 @@ jobs:
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;17.2.4988734"
       - uses: gradle/actions/setup-gradle@v4
+      - name: Install legacy NDK host compatibility library
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libtinfo5
       - name: Build native common library first
         run: bash ./gradlew :common:externalNativeBuildDebug --stacktrace --no-daemon
       - name: Build debug APK
