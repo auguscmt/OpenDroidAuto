@@ -27,6 +27,8 @@ jobs:
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;17.2.4988734"
       - uses: gradle/actions/setup-gradle@v4
+      - name: Build native common library first
+        run: bash ./gradlew :common:externalNativeBuildDebug --stacktrace --no-daemon
       - name: Build debug APK
         run: bash ./gradlew :app:assembleDebug --stacktrace --no-daemon
       - name: Upload APK for hardware testing
