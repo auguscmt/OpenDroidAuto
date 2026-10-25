@@ -131,8 +131,8 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
         NotificationFactory.instance().dismissAll();
         AppBadge.instance().dismiss();
 
-        initReceivers();
         isActive_ = true;
+        initReceivers();
     }
 
     @Override
