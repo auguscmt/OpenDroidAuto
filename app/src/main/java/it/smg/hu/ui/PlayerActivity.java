@@ -225,7 +225,11 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
         ODAService.ServiceBinder binder = (ODAService.ServiceBinder) service;
         odaService_ = binder.getService();
 
-        isServiceBound_ = true;
+        // A late callback must not restart projection after the Activity pauses.
+        if (!isActive_) {
+            if (Log.isInfo()) Log.i(TAG, "Ignoring service callback while inactive");
+            return;
+        }
 
         if (isRunning_){
             odaService_.gainFocus();
