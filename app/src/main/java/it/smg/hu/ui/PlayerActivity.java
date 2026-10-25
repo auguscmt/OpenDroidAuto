@@ -122,7 +122,7 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
 
         Intent odaServiceIntent = new Intent(this, ODAService.class);
         startService(odaServiceIntent);
-        bindService(odaServiceIntent, this, BIND_AUTO_CREATE | BIND_ABOVE_CLIENT | BIND_IMPORTANT);
+        isServiceBound_ = bindService(odaServiceIntent, this, BIND_AUTO_CREATE | BIND_ABOVE_CLIENT | BIND_IMPORTANT);
 
         if (Settings.instance().advanced.hondaIntegrationEnabled()){
             HondaConnectManager.instance().initAudioBinding();
