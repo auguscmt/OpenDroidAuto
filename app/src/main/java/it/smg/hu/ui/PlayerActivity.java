@@ -120,6 +120,8 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
         super.onResume();
         if (Log.isDebug()) Log.d(TAG, "onResume");
 
+        // Set active before binding: onServiceConnected may arrive promptly.
+        isActive_ = true;
         Intent odaServiceIntent = new Intent(this, ODAService.class);
         startService(odaServiceIntent);
         isServiceBound_ = bindService(odaServiceIntent, this, BIND_AUTO_CREATE | BIND_ABOVE_CLIENT | BIND_IMPORTANT);
@@ -131,7 +133,6 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
         NotificationFactory.instance().dismissAll();
         AppBadge.instance().dismiss();
 
-        isActive_ = true;
         initReceivers();
     }
 
