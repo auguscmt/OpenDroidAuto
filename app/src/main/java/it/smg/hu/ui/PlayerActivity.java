@@ -56,7 +56,7 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
             isRunning_ = savedInstanceState.getBoolean("isRunning");
         } else {
             Bundle b = getIntent().getExtras();
-            startMode_ = b.getString("mode");
+            startMode_ = b != null ? b.getString("mode") : null;
         }
 
         if (Log.isDebug()) Log.d(TAG, "start mode: " + startMode_);
@@ -97,7 +97,7 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
             HondaConnectManager.instance().endAudioBinding();
         }
 
-        odaService_.stop();
+        if (odaService_ != null) odaService_.stop();
     }
 
     @Override
@@ -109,7 +109,7 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
                 HondaConnectManager.instance().endAudioBinding();
             }
 
-            odaService_.stop();
+            if (odaService_ != null) odaService_.stop();
             return true;
         }
         return super.onKeyLongPress(keyCode, event);
@@ -145,6 +145,8 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
 
         if (isServiceBound_) {
             unbindService(this);
+            isServiceBound_ = false;
+            odaService_ = null;
         }
 
         if (Settings.instance().advanced.hondaIntegrationEnabled()){
@@ -153,7 +155,10 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
 
         AppBadge.instance().show();
 
-        localBroadcastManager_.unregisterReceiver(localReceiver_);
+        if (localReceiver_ != null) {
+            localBroadcastManager_.unregisterReceiver(localReceiver_);
+            localReceiver_ = null;
+        }
         isActive_ = false;
     }
 
@@ -235,6 +240,10 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
             HondaConnectManager.instance().adjustPermission();
         }
 
+        if (startMode_ == null) {
+            Log.e(TAG, "Missing projection start mode");
+            return;
+        }
         switch (startMode_){
             case ODAService.MODE_USB:
                 odaService_.startUsb(surfaceView_, this);
