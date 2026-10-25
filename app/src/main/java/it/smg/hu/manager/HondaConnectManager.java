@@ -206,7 +206,7 @@ public class HondaConnectManager {
         if (Log.isVerbose()) Log.v(TAG, "requestAudioFocus modeMgr audio hasAudioFocus= " + hasAudioFocus_);
 
         // If AUTH_TYPE <> preinstall the app has already audio focus
-        if (isPreinstalledApp() && !hasAudioFocus_) {
+        if (isPreinstalledApp() && !hasAudioFocus_ && modeMgrManager_ != null) {
             int idx = settings_.advanced.modeMgrAudioIdx();
             int ret;
 
@@ -242,7 +242,7 @@ public class HondaConnectManager {
         if (Log.isVerbose()) Log.v(TAG, "releaseAudioFocus modeMgr audio hasAudioFocus= " + hasAudioFocus_);
 
         // If AUTH_TYPE <> preinstall the app has already audio focus
-        if (isPreinstalledApp() && hasAudioFocus_) {
+        if (isPreinstalledApp() && hasAudioFocus_ && modeMgrManager_ != null) {
             int idx = settings_.advanced.modeMgrAudioIdx();
             int ret;
 
