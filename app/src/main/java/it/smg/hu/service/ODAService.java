@@ -108,9 +108,12 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                 }
             }
             synchronized (ODAService.this) {
-                if (!isRunning_) startThread_ = null;
+                // A missing USB device must not prevent a later connection attempt.
+                if (!isRunning_ && !isStopping_ && startThread_ == Thread.currentThread()) {
+                    startThread_ = null;
+                }
             }
-            if (Log.isInfo()) Log.i(TAG, "start usb thead completed");
+            if (Log.isInfo()) Log.i(TAG, "start usb thread completed");
         });
         startThread_.start();
     }
