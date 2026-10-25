@@ -54,6 +54,7 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
 
     private volatile boolean isRunning_;
     private boolean isStopping_;
+    private long sessionGeneration_;
 
     public ODAService() {}
 
@@ -77,12 +78,16 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
             if (Log.isInfo()) Log.i(TAG, "Ignoring duplicate USB start");
             return;
         }
+        final long generation = ++sessionGeneration_;
         startThread_ = new Thread(() -> {
             Looper.prepare();
 
             LibUsbDevice device = usbManager_.aoapDevice();
             if (device != null) {
-                isRunning_ = true;
+                synchronized (ODAService.this) {
+                    if (generation != sessionGeneration_ || isStopping_) return;
+                    isRunning_ = true;
+                }
 
                 if (Log.isVerbose()) Log.v(TAG, "aoap device available, start in usb mode");
                 try {
@@ -115,13 +120,17 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
             if (Log.isInfo()) Log.i(TAG, "Ignoring duplicate WiFi start");
             return;
         }
+        final long generation = ++sessionGeneration_;
         startThread_ = new Thread(() -> {
             Looper.prepare();
 
             try {
                 String ipAddress = wifiManager_.getIpAddress();
                 if (ipAddress != null) {
-                    isRunning_ = true;
+                    synchronized (ODAService.this) {
+                        if (generation != sessionGeneration_ || isStopping_) return;
+                        isRunning_ = true;
+                    }
 
 //                    if (Log.isInfo()) Log.i(TAG, "Connect to ip " + ipAddress);
                     TCPEndpoint tcpEndpoint = new TCPEndpoint(ipAddress);
@@ -177,6 +186,7 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                 return;
             }
             isStopping_ = true;
+            ++sessionGeneration_;
             isRunning_ = false;
         }
 
