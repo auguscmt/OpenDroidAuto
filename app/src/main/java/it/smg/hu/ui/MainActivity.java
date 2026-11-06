@@ -151,9 +151,16 @@ public class MainActivity extends FragmentActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (Log.isDebug()) Log.d(TAG, "onNewIntent, action " + intent.getAction());
-        if ( UsbManager.ACTION_USB_DEVICE_ATTACHED.equalsIgnoreCase(intent.getAction())) {
+        if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equalsIgnoreCase(intent.getAction())) {
             if (Log.isInfo()) Log.i(TAG, "attached new device, keep intent");
             newUsbDeviceIntent_ = intent;
+            // singleTask may deliver USB attach while already resumed;
+            // onResume is not guaranteed to run again in that case.
+            if (isResumed_ && usbManager_ != null) {
+                UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                if (device != null) usbManager_.checkDevice(device);
+                newUsbDeviceIntent_ = null;
+            }
         }
     }
 
