@@ -113,6 +113,16 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                     }
                 } catch (Exception e){
                     Log.e(TAG, "error", e);
+                    // If construction failed, no transport exists to close USB for us.
+                    synchronized (ODAService.this) {
+                        if (androidAutoEntity_ == null) {
+                            try {
+                                device.close();
+                            } catch (Exception closeError) {
+                                Log.e(TAG, "USB close after startup failure", closeError);
+                            }
+                        }
+                    }
                     onAndroidAutoQuitOnError("USB GENERIC ERROR", -1);
                     return;
                 }
