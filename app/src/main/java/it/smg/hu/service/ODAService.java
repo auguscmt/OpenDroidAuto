@@ -94,8 +94,16 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
 
                     if (device.open()) {
                         if (Log.isInfo()) Log.i(TAG, "device opened");
-                        androidAutoEntity_ = AndroidAutoEntityFactory.create(this, device, surfaceView, keyHolder);
-                        androidAutoEntity_.start(this);
+                        // Publish/start atomically with respect to stop(): never start a
+                        // native session that shutdown has already invalidated.
+                        synchronized (ODAService.this) {
+                            if (generation != sessionGeneration_ || isStopping_) {
+                                if (Log.isWarn()) Log.w(TAG, "USB startup cancelled after device.open");
+                                return;
+                            }
+                            androidAutoEntity_ = AndroidAutoEntityFactory.create(this, device, surfaceView, keyHolder);
+                            androidAutoEntity_.start(this);
+                        }
                     } else {
                         Log.e(TAG, "Error in open usb device");
                         onAndroidAutoQuitOnError("USB OPEN DEVICE", -1);
@@ -137,8 +145,11 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
 
 //                    if (Log.isInfo()) Log.i(TAG, "Connect to ip " + ipAddress);
                     TCPEndpoint tcpEndpoint = new TCPEndpoint(ipAddress);
-                    androidAutoEntity_ = AndroidAutoEntityFactory.create(this, tcpEndpoint, surfaceView, keyHolder);
-                    androidAutoEntity_.start(this);
+                    synchronized (ODAService.this) {
+                        if (generation != sessionGeneration_ || isStopping_) return;
+                        androidAutoEntity_ = AndroidAutoEntityFactory.create(this, tcpEndpoint, surfaceView, keyHolder);
+                        androidAutoEntity_.start(this);
+                    }
                 }
                 synchronized (ODAService.this) {
                     if (!isRunning_) startThread_ = null;
@@ -184,7 +195,7 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
         // Claim shutdown once, without holding the monitor during native teardown:
         // JNI callbacks can re-enter stop() from another thread.
         synchronized (this) {
-            if (!isRunning_ || isStopping_) {
+            if ((!isRunning_ && startThread_ == null) || isStopping_) {
                 if (Log.isInfo()) Log.i(TAG, "service not running or already stopping");
                 return;
             }
@@ -241,6 +252,7 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
 
     public void onDestroy() {
         if (Log.isDebug()) Log.d(TAG, "onDestroy");
+        super.onDestroy();
     }
 
     @Override
@@ -257,7 +269,8 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
         startForeground(123456, notification);
 
 //        return START_NOT_STICKY;
-        return START_STICKY;
+        // Do not auto-resurrect a stale USB/native session after Android kills it.
+        return START_NOT_STICKY;
     }
 
     @Keep
