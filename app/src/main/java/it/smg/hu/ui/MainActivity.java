@@ -13,6 +13,7 @@ import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.widget.Toast;
 
 import androidx.fragment.app.FragmentActivity;
@@ -41,6 +42,34 @@ public class MainActivity extends FragmentActivity {
     private boolean isOpenFromMain_ = false;
     private boolean isOpenFromUsb_ = false;
     private boolean isServiceBound_ = false;
+
+    // The AOA attach event is the reliable signal provided by the XUDA/USB host.
+    // Only one automatic launch per attachment is allowed: no retry loops.
+    private static final long USB_AUTOSTART_DEBOUNCE_MS = 5000L;
+    private final Handler usbStartHandler_ = new Handler();
+    private long lastUsbAutoStartMs_ = -USB_AUTOSTART_DEBOUNCE_MS;
+    private boolean usbAutoStartPending_ = false;
+    private boolean isResumed_ = false;
+    private final Runnable usbAutoStart_ = new Runnable() {
+        @Override public void run() {
+            usbAutoStartPending_ = false;
+            if (!isResumed_ || usbManager_ == null || usbManager_.aoapDevice() == null
+                    || PlayerActivity.isActive()) return;
+            lastUsbAutoStartMs_ = SystemClock.elapsedRealtime();
+            if (Log.isInfo()) Log.i(TAG, "AOAP connected: opening USB projection once");
+            Intent player = new Intent(MainActivity.this, PlayerActivity.class);
+            player.putExtra("mode", ODAService.MODE_USB);
+            player.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(player);
+        }
+    };
+
+    private void scheduleUsbAutoStart() {
+        if (usbAutoStartPending_ || PlayerActivity.isActive()) return;
+        if (SystemClock.elapsedRealtime() - lastUsbAutoStartMs_ < USB_AUTOSTART_DEBOUNCE_MS) return;
+        usbAutoStartPending_ = true;
+        usbStartHandler_.postDelayed(usbAutoStart_, 650);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,13 +139,10 @@ public class MainActivity extends FragmentActivity {
             final String TAG = "MainActivity-UsbReceiver";
 
             if (Log.isDebug()) Log.d(TAG, intent.getAction());
-            if (isOpenFromUsb_) {
-                if (intent.getAction().equals(USBManager.ATTACH_AOAP_DEVICE)) {
-                    if (Log.isDebug()) Log.d(TAG, "open popup activity");
-                    NotificationFactory.instance().notifyStartRequest();
-
-//                    MainActivity.this.finish();
-                }
+            if (USBManager.ATTACH_AOAP_DEVICE.equals(intent.getAction())) {
+                // Start projection on a fresh accessory attachment, regardless
+                // of whether the launcher or USB intent opened this Activity.
+                scheduleUsbAutoStart();
             }
         }
     };
@@ -135,6 +161,7 @@ public class MainActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         if (Log.isDebug()) Log.d(TAG, "onResume");
+        isResumed_ = true;
 
         Intent odaServiceIntent = new Intent(this, ODAService.class);
         startService(odaServiceIntent);
@@ -172,6 +199,9 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     protected void onPause() {
+        isResumed_ = false;
+        usbStartHandler_.removeCallbacks(usbAutoStart_);
+        usbAutoStartPending_ = false;
         super.onPause();
         unregisterReceiver(wifiReceiver);
 
