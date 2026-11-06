@@ -97,7 +97,10 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
             HondaConnectManager.instance().endAudioBinding();
         }
 
-        if (odaService_ != null) odaService_.stop();
+        if (odaService_ != null) {
+            final ODAService serviceToStop = odaService_;
+            new Thread(() -> serviceToStop.stop(), "ODA-user-stop").start();
+        }
     }
 
     @Override
@@ -109,7 +112,10 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
                 HondaConnectManager.instance().endAudioBinding();
             }
 
-            if (odaService_ != null) odaService_.stop();
+            if (odaService_ != null) {
+            final ODAService serviceToStop = odaService_;
+            new Thread(() -> serviceToStop.stop(), "ODA-user-stop").start();
+        }
             return true;
         }
         return super.onKeyLongPress(keyCode, event);
