@@ -1,5 +1,6 @@
 package it.smg.hu.projection;
 
+import android.os.Build;
 import android.view.SurfaceView;
 
 import it.smg.hu.config.Settings;
@@ -18,6 +19,15 @@ public abstract class VideoOutput extends it.smg.libs.aasdk.projection.VideoOutp
 
         fps_ = fpsFromSettings(settings_.video.fps());
         resolution_ = settings_.video.resolution();
+
+        // The Honda Connect Android 4.0.4 head unit uses the legacy OMX decoder.
+        // Keep the negotiated stream within its practical 480p/30fps budget,
+        // even when a higher video profile was selected in preferences.
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1
+                && settings_.advanced.hondaIntegrationEnabled()) {
+            fps_ = Math.min(fps_, 30);
+            resolution_ = 1; // AA 480p profile (same as the existing default).
+        }
         dpi_ = settings_.video.dpi();
 
         String margin = settings_.video.margin();
