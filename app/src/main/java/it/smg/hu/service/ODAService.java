@@ -99,6 +99,8 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
                         synchronized (ODAService.this) {
                             if (generation != sessionGeneration_ || isStopping_) {
                                 if (Log.isWarn()) Log.w(TAG, "USB startup cancelled after device.open");
+                                // No entity owns the device yet, so close it here.
+                                device.close();
                                 return;
                             }
                             androidAutoEntity_ = AndroidAutoEntityFactory.create(this, device, surfaceView, keyHolder);
