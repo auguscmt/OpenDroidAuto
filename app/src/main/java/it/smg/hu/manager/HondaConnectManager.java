@@ -268,12 +268,12 @@ public class HondaConnectManager {
 
     public void increaseVolume(){
         if (Log.isVerbose()) Log.v(TAG, "increaseVolume");
-        modeMgrManager_.reqModeMgrSteeringVolCmd(true);
+        if (modeMgrManager_ != null) modeMgrManager_.reqModeMgrSteeringVolCmd(true);
     }
 
     public void decreaseVolume(){
         if (Log.isVerbose()) Log.v(TAG, "decreaseVolume");
-        modeMgrManager_.reqModeMgrSteeringVolCmd(false);
+        if (modeMgrManager_ != null) modeMgrManager_.reqModeMgrSteeringVolCmd(false);
     }
 
     // Used in onCreate
@@ -288,6 +288,10 @@ public class HondaConnectManager {
     // Used in onResume
     public void initAudioBinding(){
         if (Log.isDebug()) Log.d(TAG, "initAudioBinding -> app with auth " + (pControl_ != null ? pControl_.authType : "unknown"));
+        // Re-establish services released by endAudioBinding on prior projection.
+        // Without this, a successful reconnect can have dead steering/mic bindings.
+        bindToEcNcService();
+        bindToWheelService();
         // if app has THIRD_PARTY auth will have exclusive audio focus, only bind wheel service
         if (isPreinstalledApp()){
             if (Log.isVerbose()) Log.v(TAG, "initAudioBinding -> app auth = preinstall -> register ModeMgr and SW callback");
