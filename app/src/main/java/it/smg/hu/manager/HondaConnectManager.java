@@ -488,6 +488,7 @@ public class HondaConnectManager {
     private void unregisterModeMgrCallback() {
         if (Log.isVerbose()) Log.v(TAG, "unregisterModeMgrCallback");
 
+        if (modeMgrManager_ == null || modeMgrServiceCallBack_ == null) return;
         int idx = settings_.advanced.modeMgrAudioIdx();
         if (Log.isVerbose()) Log.v(TAG, "unregisterModeMgrCallback idx " + idx);
         int ret = modeMgrManager_.unregisterModeMgrCallback(idx);
@@ -498,7 +499,7 @@ public class HondaConnectManager {
 
     private void registerModeMgrCallback(){
         if (Log.isDebug()) Log.d(TAG, "registerModeMgrCallback");
-        if (modeMgrManager_ != null) {
+        if (modeMgrManager_ != null && modeMgrServiceCallBack_ == null) {
             int idx = settings_.advanced.modeMgrAudioIdx();
             if (Log.isVerbose()) Log.v(TAG, "registerModeMgrCallback idx " + idx);
             modeMgrServiceCallBack_ = new ModeMgrServiceCallBack();
