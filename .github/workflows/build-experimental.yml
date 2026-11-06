@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - fix/session-stability
+      - opt/honda-legacy-performance
 
 jobs:
   build:
