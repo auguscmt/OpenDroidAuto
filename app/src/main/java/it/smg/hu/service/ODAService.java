@@ -278,7 +278,8 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
     @Keep
     @Override
     public void onAndroidAutoQuit() {
-        stop();
+        // Do not tear down native resources on a JNI callback/runtime thread.
+        new Thread(this::stop, "ODA-native-quit").start();
     }
 
     @Keep
@@ -290,7 +291,9 @@ public class ODAService extends Service implements IAndroidAutoEntityEventHandle
             Toast.makeText(this, "Closed due to " + error + " error", Toast.LENGTH_LONG).show();
         });
 
-        stop();
+        // Native error callbacks may arrive while nativeStart is still running.
+        // Queue teardown away from the callback thread to avoid reentrant JNI cleanup.
+        new Thread(this::stop, "ODA-native-error-stop").start();
     }
 
     @Keep
