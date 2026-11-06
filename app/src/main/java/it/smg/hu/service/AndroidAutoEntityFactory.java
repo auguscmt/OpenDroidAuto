@@ -1,6 +1,7 @@
 package it.smg.hu.service;
 
 import android.content.Context;
+import android.os.Build;
 import android.view.SurfaceView;
 
 import it.smg.hu.config.Settings;
@@ -49,6 +50,12 @@ public class AndroidAutoEntityFactory {
             builder.createMediaStatusService(DeviceFactory.createMediaStatusEvent());
         }
 
-        builder.setThreadNum(Settings.instance().advanced.threads());
+        int threadCount = Settings.instance().advanced.threads();
+        // Avoid oversubscribing the low-memory Honda Android 4.0.4 host.
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1
+                && Settings.instance().advanced.hondaIntegrationEnabled()) {
+            threadCount = Math.min(threadCount, 3);
+        }
+        builder.setThreadNum(Math.max(2, threadCount));
     }
 }
