@@ -147,7 +147,8 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
         if (isServiceBound_) {
             unbindService(this);
             isServiceBound_ = false;
-            odaService_ = null;
+            // Retain the service reference until onStop: Honda Power may
+            // background the Activity without invoking onBackPressed().
         }
 
         if (Settings.instance().advanced.hondaIntegrationEnabled()){
@@ -189,6 +190,15 @@ public class PlayerActivity extends Activity implements ServiceConnection, Surfa
     protected void onStop() {
         super.onStop();
         if (Log.isDebug()) Log.d(TAG, "onStop");
+        // Honda Power returns to the launcher without a BACK key event.
+        // A projected session must not survive invisibly and poison reconnect.
+        // Use a worker: native teardown can be expensive on this old head unit.
+        if (!isChangingConfigurations() && odaService_ != null) {
+            final ODAService serviceToStop = odaService_;
+            odaService_ = null;
+            isRunning_ = false;
+            new Thread(() -> serviceToStop.stop(), "ODA-power-stop").start();
+        }
     }
 
     @Override
